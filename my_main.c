@@ -255,17 +255,6 @@ void my_main() {
                     //         op[i].op.light.c[0], op[i].op.light.c[1],
                     //         op[i].op.light.c[2]);
                     //     break;
-
-                    // case AMBIENT:
-                    //     printf("Ambient: %6.2f %6.2f %6.2f",
-                    //         op[i].op.ambient.c[0],
-                    //         op[i].op.ambient.c[1],
-                    //         op[i].op.ambient.c[2]);
-                    //     break;
-
-                    // case CONSTANTS:
-                    //     printf("Constants: %s", op[i].op.constants.p -> name);
-                    //     break;
                     
                     // case SAVE_COORDS:
                     //     printf("Save Coords: %s", op[i].op.save_coordinate_system.p -> name);
@@ -393,12 +382,6 @@ void my_main() {
                     //     }
                     //     break;
 
-                    // case SET:
-                    //     printf("Set: %s %6.2f",
-                    //         op[i].op.set.p -> name,
-                    //         op[i].op.set.p -> s.value);
-                    //     break;
-
                     case MOVE: {
                         double x = op[i].op.move.d[0];
                         double y = op[i].op.move.d[1];
@@ -463,10 +446,6 @@ void my_main() {
                         break;
                     }
 
-                    // case SAVE_KNOBS:
-                    //     printf("Save knobs: %s", op[i].op.save_knobs.p -> name);
-                    //     break;
-
                     // case TWEEN:
                     //     printf("Tween: %4.0f %4.0f, %s %s",
                     //         op[i].op.tween.start_frame,
@@ -529,17 +508,6 @@ void my_main() {
                 //         op[i].op.light.p -> name,
                 //         op[i].op.light.c[0], op[i].op.light.c[1],
                 //         op[i].op.light.c[2]);
-                //     break;
-
-                // case AMBIENT:
-                //     printf("Ambient: %6.2f %6.2f %6.2f",
-                //         op[i].op.ambient.c[0],
-                //         op[i].op.ambient.c[1],
-                //         op[i].op.ambient.c[2]);
-                //     break;
-
-                // case CONSTANTS:
-                //     printf("Constants: %s", op[i].op.constants.p -> name);
                 //     break;
                 
                 // case SAVE_COORDS:
@@ -691,12 +659,6 @@ void my_main() {
                 //     }
                 //     break;
 
-                // case SET:
-                //     printf("Set: %s %6.2f",
-                //         op[i].op.set.p -> name,
-                //         op[i].op.set.p -> s.value);
-                //     break;
-
                 case MOVE: {
                     double x = op[i].op.move.d[0];
                     double y = op[i].op.move.d[1];
@@ -760,10 +722,6 @@ void my_main() {
                     break;
                 }
 
-                // case SAVE_KNOBS:
-                //     printf("Save knobs: %s", op[i].op.save_knobs.p -> name);
-                //     break;
-
                 // case TWEEN:
                 //     printf("Tween: %4.0f %4.0f, %s %s",
                 //         op[i].op.tween.start_frame,
@@ -799,10 +757,6 @@ void my_main() {
 
                 // case SHADING:
                 //     printf("Shading: %s", op[i].op.shading.p -> name);
-                //     break;
-
-                // case SETKNOBS:
-                //     printf("Setknobs: %f", op[i].op.setknobs.value);
                 //     break;
 
                 // case FOCAL:
