@@ -180,7 +180,10 @@ void my_main() {
 	cline.green = 0;
 	cline.blue = 0;
 
-	double polystep = 100;
+	double polystep = 10;
+
+    // Default shading type
+    int type = FLAT;
 
 	//Lighting values here for easy access
 	color ambient;
@@ -281,10 +284,10 @@ void my_main() {
                         matrix_mult(matrix, temp);
 
                         if (symbols != NULL) {
-                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c);
+                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
                         }
                         else {
-                            draw_polygons(temp, s, zb, view, light, ambient, reflect);
+                            draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                         }
 
                         if (op[i].op.sphere.cs != NULL) {
@@ -307,10 +310,10 @@ void my_main() {
                         matrix_mult(matrix, temp);
 
                         if (symbols != NULL) {
-                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c);
+                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
                         }
                         else {
-                            draw_polygons(temp, s, zb, view, light, ambient, reflect);
+                            draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                         }
 
                         if (op[i].op.torus.cs != NULL) {
@@ -334,10 +337,10 @@ void my_main() {
                         matrix_mult(matrix, temp);
 
                         if (symbols != NULL) {
-                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c);
+                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
                         }
                         else {
-                            draw_polygons(temp, s, zb, view, light, ambient, reflect);
+                            draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                         }
 
                         if (op[i].op.box.cs != NULL) {
@@ -466,13 +469,17 @@ void my_main() {
                     //     printf("Generate Ray Files");
                     //     break;
 
-                    // case SHADING:
-                    //     printf("Shading: %s", op[i].op.shading.p -> name);
-                    //     break;
+                    case SHADING: {
+                    char * name = op[i].op.shading.p -> name;
 
-                    // case SETKNOBS:
-                    //     printf("Setknobs: %f", op[i].op.setknobs.value);
-                    //     break;
+                    printf("Shading: %s", name);
+                    if (!strcmp(name, "wireframe")) type = WIREFRAME;
+                    if (!strcmp(name, "flat")) type = FLAT;
+                    if (!strcmp(name, "gouraud")) type = GOURAUD;
+                    if (!strcmp(name, "phong")) type = PHONG;
+
+                    break;
+                    }
 
                     // case FOCAL:
                     //     printf("Focal: %f", op[i].op.focal.value);
@@ -540,10 +547,10 @@ void my_main() {
                     if (symbols != NULL) {
                         printf("\tconstants: %s", symbols -> name);
 
-                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c);
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
                     }
                     else {
-                        draw_polygons(temp, s, zb, view, light, ambient, reflect);
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                     }
 
                     if (op[i].op.sphere.cs != NULL) {
@@ -572,10 +579,10 @@ void my_main() {
                     if (symbols != NULL) {
                         printf("\tconstants: %s", symbols -> name);
 
-                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c);
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
                     }
                     else {
-                        draw_polygons(temp, s, zb, view, light, ambient, reflect);
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                     }
 
                     if (op[i].op.torus.cs != NULL) {
@@ -605,10 +612,10 @@ void my_main() {
                     if (symbols != NULL) {
                         printf("\tconstants: %s", symbols -> name);
 
-                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c);
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
                     }
                     else {
-                        draw_polygons(temp, s, zb, view, light, ambient, reflect);
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                     }
 
                     if (op[i].op.box.cs != NULL) {
@@ -755,9 +762,17 @@ void my_main() {
                     break;
                 }
 
-                // case SHADING:
-                //     printf("Shading: %s", op[i].op.shading.p -> name);
-                //     break;
+                case SHADING: {
+                    char * name = op[i].op.shading.p -> name;
+
+                    printf("Shading: %s", name);
+                    if (!strcmp(name, "wireframe")) type = WIREFRAME;
+                    if (!strcmp(name, "flat")) type = FLAT;
+                    if (!strcmp(name, "gouraud")) type = GOURAUD;
+                    if (!strcmp(name, "phong")) type = PHONG;
+
+                    break;
+                }
 
                 // case FOCAL:
                 //     printf("Focal: %f", op[i].op.focal.value);

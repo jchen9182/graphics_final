@@ -41,6 +41,12 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
     }
 }
 
+// scanline_convert helper function
+void swap(double *a, double *b) {
+    double temp = *a;
+    *a = *b;
+    *b = temp;
+}
 /*======== void scanline_convert() ==========
   Inputs: struct matrix *points
           int i
@@ -51,7 +57,8 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
   Color should be set differently for each polygon.
   Includes Greg's pixel perfect scanning
   ====================*/
-void scanline_convert(struct matrix * points, int col, screen s, zbuffer zbuff, color c) {
+void scanline_convert(  struct matrix * points, int col, 
+                        screen s, zbuffer zbuff, color * colors, int type) {
     double ** matrix = points -> m;
     double xb = matrix[0][col];
     double xm = matrix[0][col + 1];
@@ -119,7 +126,7 @@ void scanline_convert(struct matrix * points, int col, screen s, zbuffer zbuff, 
         }
         else offx = ceil(x0) - x0;
 
-        draw_scanline(x0, z0, x1, z1, y, offx, s, zbuff, c);
+        draw_scanline(x0, z0, x1, z1, y, offx, s, zbuff, colors, type);
         x0 += mx0;
         x1 += mx1;
         z0 += mz0;
@@ -152,6 +159,21 @@ void add_polygon(struct matrix * polygons,
     add_point(polygons, x2, y2, z2);
 }
 
+// draw_polygons helper function
+int compare(double ** matrix, int thisCol, int compareCol) {
+    double x = matrix[0][thisCol];
+    double y = matrix[1][thisCol];
+    double z = matrix[2][thisCol];
+
+    for (int i = compareCol; i < compareCol + 3; i++) {
+        double thisX = matrix[0][i];
+        double thisY = matrix[1][i];
+        double thisZ = matrix[2][i];
+
+        if (x == thisX && y == thisY && z == thisZ) return 1;
+    }
+    return 0;
+}
 /*======== void draw_polygons() ==========
   Inputs:   struct matrix *polygons
             screen s
@@ -162,21 +184,81 @@ void add_polygon(struct matrix * polygons,
   ====================*/
 void draw_polygons( struct matrix * polygons, screen s, zbuffer zb, 
                     double * view, double light[2][3], color ambient,
-                    struct constants * reflect) {
+                    struct constants * reflect, int type) {
     int lastcol = polygons -> lastcol;
+    double ** matrix = polygons -> m;
 
     if (lastcol < 3) {
         printf("Need at least 3 points to draw a polygon!\n");
         return;
     }
 
-    for (int col = 0; col < lastcol - 2; col += 3) {
-        double * normal = calculate_normal(polygons, col);
+    if (type < 2) {
+        for (int col = 0; col < lastcol - 2; col += 3) {
+            double * normal = calculate_normal(polygons, col);
+                
+            if (normal[2] > 0) {
+                // get color value only if front facing
+                color clight = get_lighting(normal, view, ambient, light, reflect);
 
-        if (normal[2] > 0) {
-            // get color value only if front facing
-            color clight = get_lighting(normal, view, ambient, light, reflect);
-            scanline_convert(polygons, col, s, zb, clight);
+                if (type == WIREFRAME) {
+                    double x0 = matrix[0][col];
+                    double y0 = matrix[1][col];
+                    double x1 = matrix[0][col + 1];
+                    double y1 = matrix[1][col + 1];
+                    double x2 = matrix[0][col + 2];
+                    double y2 = matrix[1][col + 2];
+
+                    draw_line(x0, y0, 0, x1, y1, 0, s, zb, clight);
+                    draw_line(x1, y1, 0, x2, y2, 0, s, zb, clight);
+                    draw_line(x2, y2, 0, x0, y0, 0, s, zb, clight);
+                }
+                else { // type = FLAT
+                    scanline_convert(polygons, col, s, zb, clight, type);
+                }
+            }
+        }
+    }
+
+    else {
+        color colors[2];
+        int counter = 0;
+
+        for (int col = 0; col < lastcol; col++) {
+            if (type == GOURAUD) {
+                double averageNormal[3] = {0, 0, 0};
+                int sharedPolygons = 0;
+
+                for (int c = 0; c < lastcol - 2; c += 3) {
+                    if (compare(matrix, col, c)) {
+                        double * normal = calculate_normal(polygons, c);
+
+                        if (normal[2] > 0) {
+                            averageNormal[0] += normal[0];
+                            averageNormal[1] += normal[1];
+                            averageNormal[2] += normal[2];
+
+                            sharedPolygons++;
+                        }
+                    }
+                }
+
+                averageNormal[0] /= sharedPolygons;
+                averageNormal[1] /= sharedPolygons;
+                averageNormal[2] /= sharedPolygons;
+
+                colors[counter] = get_lighting(averageNormal, view, ambient, light, reflect);
+
+                // scanline_convert(polygons, col, s, zb, clight);
+
+                if (col != 0 && counter % 2 == 0) {
+                    counter = 0;
+                }
+                counter++;
+            }
+            else { // type = PHONG
+
+            }
         }
     }
 }
@@ -649,10 +731,4 @@ void change_color(color * c, int r, int g, int b) {
     c -> red = r;
     c -> green = g;
     c -> blue = b;
-}
-//======== swap (double *a, double *b) ==========
-void swap(double *a, double *b) {
-    double temp = *a;
-    *a = *b;
-    *b = temp;
 }
