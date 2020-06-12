@@ -1,5 +1,5 @@
 // Note: This uses the light values in the provided source code.
-constants shiny_purple 0.3 0.2 0.8 0.3 0 0 0.3 0.2 0.8
+constants shiny_purple 0.3 0.2 0.8 0.3 0 0.8 0.3 0.2 0.8
 constants shiny_teal 0.3 0.0 0.0 0.3 0.2 0.8 0.3 0.2 0.8
 constants dull_yellow 0.3 0.8 0.2 0.3 0.8 0.2 0 0 0
 

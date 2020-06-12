@@ -180,7 +180,7 @@ void my_main() {
 	cline.green = 0;
 	cline.blue = 0;
 
-	double polystep = 50;
+	double polystep = 20;
 
     // Default shading type
     int type = FLAT;
@@ -472,7 +472,6 @@ void my_main() {
                     case SHADING: {
                     char * name = op[i].op.shading.p -> name;
 
-                    printf("Shading: %s", name);
                     if (!strcmp(name, "wireframe")) type = WIREFRAME;
                     if (!strcmp(name, "flat")) type = FLAT;
                     if (!strcmp(name, "gouraud")) type = GOURAUD;
@@ -658,13 +657,21 @@ void my_main() {
                     break;
                 }
                 
-                // case MESH:
-                //     printf("Mesh: filename: %s", op[i].op.mesh.name);
-                //     if (op[i].op.mesh.constants != NULL)
-                //     {
-                //         printf("\tconstants: %s", op[i].op.mesh.constants -> name);
-                //     }
-                //     break;
+                case MESH: {
+                    char * name = op[i].op.mesh.name;
+                    printf("Mesh: filename: %s", name);
+
+                    SYMTAB * symbols = op[i].op.box.constants;
+
+                    if (symbols != NULL) {
+                        printf("\tconstants: %s", symbols -> name);
+                    }
+                    else {
+                        
+                    }
+
+                    break;
+                }
 
                 case MOVE: {
                     double x = op[i].op.move.d[0];

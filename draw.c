@@ -37,19 +37,20 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
     }
 
     int x = ceil(x0);
-
-    double mz = (x1 - x0) != 0 ? (z1 - z0) / (x1 - x0 + 1) : 0;
+    double dist = x1 - x0 + 1;
+    
+    double mz = (x1 - x0) > 0 ? (z1 - z0) / dist : 0;
     double z = z0 + mz * offx;
 
     color mc;
     if (type == GOURAUD) {
-        mc.red = (c1.red - c0.red) / (x1 - x0 + 1);
-        mc.green = (c1.green - c0.green) / (x1 - x0 + 1);
-        mc.blue = (c1.blue - c0.blue) / (x1 - x0 + 1);
+        mc.red = (c1.red - c0.red) / dist;
+        mc.green = (c1.green - c0.green) / dist;
+        mc.blue = (c1.blue - c0.blue) / dist;
     }
 
     while (x < ceil(x1)) {
-        plot(s, zb, c0, x, y, z);
+        plot(s, zb, c1, x, y, z);
         
         z += mz;
         x++;
@@ -150,12 +151,7 @@ void scanline_convert(  struct matrix * points, int col,
     color c0 = cb;
     color c1 = cb;
     color c2 = cm;
-    if (type == GOURAUD) {
-        add_color(&c0, &mc0);
-        add_color(&c1, &mc1);
-        add_color(&c2, &mc2);
-    }
-
+    
     int toggle = 1;
     while (y < ceil(yt)) {
         double offx;
@@ -169,10 +165,8 @@ void scanline_convert(  struct matrix * points, int col,
                 c1 = c2;
                 mc1 = mc2;
             }
-            
             toggle = 0;
         }
-
         if (x0 > x1) {
             offx = ceil(x1) - x1;
         }
@@ -285,7 +279,7 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
     }
 
     else {
-        color colors[2];
+        color colors[3];
         int counter = 0;
 
         for (int col = 0; col < lastcol; col++) {
@@ -314,9 +308,8 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
                 colors[counter] = get_lighting(averageNormal, view, ambient, light, reflect);
 
                 counter++;
-                if (counter % 3 == 0 || col == 0) {
-                    if (averageNormal[2] > 0)
-                        scanline_convert(polygons, col, s, zb, colors, type);
+                if (counter % 3 == 0 && col > 0) {
+                    scanline_convert(polygons, col - 2, s, zb, colors, type);
                     counter = 0;
                 }
             }
