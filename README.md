@@ -1,4 +1,4 @@
-# Graphics Final Project Justin Chen Period 10
+# Graphics Final Project Justin Chen Period 10 unfinished
 
 ## Implemented Features:
   - shading [wireframe/flat/gouraud/phong]
