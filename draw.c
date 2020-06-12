@@ -9,6 +9,17 @@
 #include "gmath.h"
 #include "symtab.h"
 
+// scanline helper function
+void add_color(color * a, color * b) {
+    a -> red += b -> red;
+    a -> green += b -> green;
+    a-> blue += b -> blue;
+}
+void swapc(color *a, color *b) {
+    color temp = *a;
+    *a = *b;
+    *b = temp;
+}
 /*======== void draw_scanline() ==========
   Inputs: struct matrix *points
           int i
@@ -18,30 +29,35 @@
   Line algorithm specifically for horizontal scanlines
   ====================*/
 void draw_scanline( double x0, double z0, double x1, double z1, int y, double offx,
-                    screen s, zbuffer zb, color c) {
+                    color c0, color c1, screen s, zbuffer zb, int type) {
     if (x0 > x1) {
         swap(&x0, &x1);
         swap(&z0, &z1);
+        if (type == GOURAUD) swapc(&c0, &c1);
     }
 
     int x = ceil(x0);
 
-    double mz = 0;
-    if ((x1 - x0) > 0) {
-        mz = (z1 - z0) / (x1 - x0);
-    }
-
+    double mz = (x1 - x0) != 0 ? (z1 - z0) / (x1 - x0 + 1) : 0;
     double z = z0 + mz * offx;
 
+    color mc;
+    if (type == GOURAUD) {
+        mc.red = (c1.red - c0.red) / (x1 - x0 + 1);
+        mc.green = (c1.green - c0.green) / (x1 - x0 + 1);
+        mc.blue = (c1.blue - c0.blue) / (x1 - x0 + 1);
+    }
+
     while (x < ceil(x1)) {
-        plot(s, zb, c, x, y, z);
+        plot(s, zb, c0, x, y, z);
         
         z += mz;
         x++;
+        if (type == GOURAUD) add_color(&c0, &mc);
     }
 }
 
-// scanline_convert helper function
+// scanline_convert helper functions
 void swap(double *a, double *b) {
     double temp = *a;
     *a = *b;
@@ -70,25 +86,35 @@ void scanline_convert(  struct matrix * points, int col,
     double zm = matrix[2][col + 1];
     double zt = matrix[2][col + 2];
 
-    if (yb > ym) {
-        swap(&yb, &ym);
-        swap(&xb, &xm);
-        swap(&zb, &zm);
-    }
-    if (ym > yt) {
-        swap(&ym, &yt);
-        swap(&xm, &xt);
-        swap(&zm, &zt);
-    }
-    if (yb > ym) {
-        swap(&yb, &ym);
-        swap(&xb, &xm);
-        swap(&zb, &zm);
+    color cb, cm, ct;
+    if (type == GOURAUD) {
+        cb = colors[0];
+        cm = colors[1];
+        ct = colors[2];
     }
 
-    double dist0 = yt - yb;
-    double dist1 = ym - yb;
-    double dist2 = yt - ym;
+    if (yb > ym) {
+        swap(&xb, &xm);
+        swap(&yb, &ym);
+        swap(&zb, &zm);
+        if (type == GOURAUD) swapc(&cb, &cm);
+    }
+    if (ym > yt) {
+        swap(&xm, &xt);
+        swap(&ym, &yt);
+        swap(&zm, &zt);
+        if (type == GOURAUD) swapc(&cm, &ct);
+    }
+    if (yb > ym) {
+        swap(&xb, &xm);
+        swap(&yb, &ym);
+        swap(&zb, &zm);
+        if (type == GOURAUD) swapc(&cb, &cm);
+    }
+
+    double dist0 = yt - yb + 1;
+    double dist1 = ym - yb + 1;
+    double dist2 = yt - ym + 1;
 
     double mx0 = dist0 > 0 ? (xt - xb) / dist0 : 0;
     double mx1 = dist1 > 0 ? (xm - xb) / dist1 : 0;
@@ -96,6 +122,19 @@ void scanline_convert(  struct matrix * points, int col,
     double mz0 = dist0 > 0 ? (zt - zb) / dist0 : 0;
     double mz1 = dist1 > 0 ? (zm - zb) / dist1 : 0;
     double mz2 = dist2 > 0 ? (zt - zm) / dist2 : 0;
+
+    color mc0, mc1, mc2;
+    if (type == GOURAUD) {
+        mc0.red = dist0 > 0 ? (ct.red - cb.red) / dist0 : 0;
+        mc0.green = dist0 > 0 ? (ct.green - cb.green) / dist0 : 0;
+        mc0.blue = dist0 > 0 ? (ct.blue - cb.blue) / dist0 : 0;
+        mc1.red = dist1 > 0 ? (cm.red - cb.red) / dist1 : 0;
+        mc1.green = dist1 > 0 ? (cm.green - cb.green) / dist1 : 0;
+        mc1.blue = dist1 > 0 ? (cm.blue - cb.blue) / dist1 : 0;
+        mc2.red = dist2 > 0 ? (ct.red - cm.red) / dist2 : 0;
+        mc2.green = dist2 > 0 ? (ct.green - cm.green) / dist2 : 0;
+        mc2.blue = dist2 > 0 ? (ct.blue - cm.blue) / dist2 : 0;
+    }
 
     double offy0 = ceil(yb) - yb;
     double offy1 = ceil(ym) - ym;
@@ -107,6 +146,15 @@ void scanline_convert(  struct matrix * points, int col,
     double z1 = zb + mz1 * offy0;
     double z2 = zm + mz2 * offy1;
     int y = ceil(yb);
+    
+    color c0 = cb;
+    color c1 = cb;
+    color c2 = cm;
+    if (type == GOURAUD) {
+        add_color(&c0, &mc0);
+        add_color(&c1, &mc1);
+        add_color(&c2, &mc2);
+    }
 
     int toggle = 1;
     while (y < ceil(yt)) {
@@ -117,6 +165,10 @@ void scanline_convert(  struct matrix * points, int col,
             z1 = z2;
             mx1 = mx2;
             mz1 = mz2;
+            if (type == GOURAUD) {
+                c1 = c2;
+                mc1 = mc2;
+            }
             
             toggle = 0;
         }
@@ -126,12 +178,23 @@ void scanline_convert(  struct matrix * points, int col,
         }
         else offx = ceil(x0) - x0;
 
-        draw_scanline(x0, z0, x1, z1, y, offx, s, zbuff, colors, type);
+        if (type == GOURAUD) {
+            draw_scanline(x0, z0, x1, z1, y, offx, c0, c1, s, zbuff, type);
+        }
+        else {
+            color c; // dummy color
+            draw_scanline(x0, z0, x1, z1, y, offx, colors[0], c, s, zbuff, type);
+        }
+
         x0 += mx0;
         x1 += mx1;
         z0 += mz0;
         z1 += mz1;
         y++;
+        if (type == GOURAUD) {
+            add_color(&c0, &mc0);
+            add_color(&c1, &mc1);
+        }
     }
 }
 /*======== void add_polygon() ==========
@@ -214,7 +277,8 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
                     draw_line(x2, y2, 0, x0, y0, 0, s, zb, clight);
                 }
                 else { // type = FLAT
-                    scanline_convert(polygons, col, s, zb, clight, type);
+                    color colors[1] = {clight};
+                    scanline_convert(polygons, col, s, zb, colors, type);
                 }
             }
         }
@@ -249,12 +313,12 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
 
                 colors[counter] = get_lighting(averageNormal, view, ambient, light, reflect);
 
-                // scanline_convert(polygons, col, s, zb, clight);
-
-                if (col != 0 && counter % 2 == 0) {
+                counter++;
+                if (counter % 3 == 0 || col == 0) {
+                    if (averageNormal[2] > 0)
+                        scanline_convert(polygons, col, s, zb, colors, type);
                     counter = 0;
                 }
-                counter++;
             }
             else { // type = PHONG
 
@@ -723,12 +787,4 @@ void draw_line( int x0, int y0, double z0, int x1, int y1, double z1,
             plot( s, zb, c, x1, y1, z1 );
         } 
     }
-}
-
-// My funcs
-//======== void change_color() ==========
-void change_color(color * c, int r, int g, int b) {
-    c -> red = r;
-    c -> green = g;
-    c -> blue = b;
 }

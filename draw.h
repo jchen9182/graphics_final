@@ -13,7 +13,7 @@
 
 // Scanline
 void draw_scanline( double x0, double z0, double x1, double z1, int y, double offx,
-                    screen s, zbuffer zb, color c);
+                    color c0, color c1, screen s, zbuffer zb, int type);
 void scanline_convert(  struct matrix * points, int col, 
                         screen s, zbuffer zbuff, color * colors, int type);
 
