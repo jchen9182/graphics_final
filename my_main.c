@@ -258,19 +258,6 @@ void my_main() {
                     //         op[i].op.light.c[0], op[i].op.light.c[1],
                     //         op[i].op.light.c[2]);
                     //     break;
-                    
-                    // case SAVE_COORDS:
-                    //     printf("Save Coords: %s", op[i].op.save_coordinate_system.p -> name);
-                    //     break;
-
-                    // case CAMERA:
-                    //     printf("Camera: eye: %6.2f %6.2f %6.2f\taim: %6.2f %6.2f %6.2f",
-                    //         op[i].op.camera.eye[0], op[i].op.camera.eye[1],
-                    //         op[i].op.camera.eye[2],
-                    //         op[i].op.camera.aim[0], op[i].op.camera.aim[1],
-                    //         op[i].op.camera.aim[2]);
-
-                    //     break;
 
                     case SPHERE: {
                         double cx = op[i].op.sphere.d[0];
@@ -288,9 +275,6 @@ void my_main() {
                         }
                         else {
                             draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
-                        }
-
-                        if (op[i].op.sphere.cs != NULL) {
                         }
 
                         temp -> lastcol = 0;
@@ -316,9 +300,6 @@ void my_main() {
                             draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                         }
 
-                        if (op[i].op.torus.cs != NULL) {
-                        }
-
                         temp -> lastcol = 0;
                         break;
                     }
@@ -341,9 +322,6 @@ void my_main() {
                         }
                         else {
                             draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
-                        }
-
-                        if (op[i].op.box.cs != NULL) {
                         }
 
                         temp -> lastcol = 0;
@@ -449,14 +427,6 @@ void my_main() {
                         break;
                     }
 
-                    // case TWEEN:
-                    //     printf("Tween: %4.0f %4.0f, %s %s",
-                    //         op[i].op.tween.start_frame,
-                    //         op[i].op.tween.end_frame,
-                    //         op[i].op.tween.knob_list0 -> name,
-                    //         op[i].op.tween.knob_list1 -> name);
-                    //     break;
-
                     case PUSH:
                         push(systems);
                         break;
@@ -464,10 +434,6 @@ void my_main() {
                     case POP:
                         pop(systems);
                         break;
-
-                    // case GENERATE_RAYFILES:
-                    //     printf("Generate Ray Files");
-                    //     break;
 
                     case SHADING: {
                     char * name = op[i].op.shading.p -> name;
@@ -479,10 +445,6 @@ void my_main() {
 
                     break;
                     }
-
-                    // case FOCAL:
-                    //     printf("Focal: %f", op[i].op.focal.value);
-                    //     break;
 
                 }
             }
@@ -515,19 +477,6 @@ void my_main() {
                 //         op[i].op.light.c[0], op[i].op.light.c[1],
                 //         op[i].op.light.c[2]);
                 //     break;
-                
-                // case SAVE_COORDS:
-                //     printf("Save Coords: %s", op[i].op.save_coordinate_system.p -> name);
-                //     break;
-
-                // case CAMERA:
-                //     printf("Camera: eye: %6.2f %6.2f %6.2f\taim: %6.2f %6.2f %6.2f",
-                //         op[i].op.camera.eye[0], op[i].op.camera.eye[1],
-                //         op[i].op.camera.eye[2],
-                //         op[i].op.camera.aim[0], op[i].op.camera.aim[1],
-                //         op[i].op.camera.aim[2]);
-
-                //     break;
 
                 case SPHERE: {
                     double cx = op[i].op.sphere.d[0];
@@ -550,10 +499,6 @@ void my_main() {
                     }
                     else {
                         draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
-                    }
-
-                    if (op[i].op.sphere.cs != NULL) {
-                        printf("\tcs: %s", op[i].op.sphere.cs -> name);
                     }
 
                     temp -> lastcol = 0;
@@ -582,10 +527,6 @@ void my_main() {
                     }
                     else {
                         draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
-                    }
-
-                    if (op[i].op.torus.cs != NULL) {
-                        printf("\tcs: %s", op[i].op.torus.cs -> name);
                     }
 
                     temp -> lastcol = 0;
@@ -617,10 +558,6 @@ void my_main() {
                         draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                     }
 
-                    if (op[i].op.box.cs != NULL) {
-                        printf("\tcs: %s", op[i].op.box.cs -> name);
-                    }
-
                     temp -> lastcol = 0;
                     break;
                 }
@@ -636,15 +573,6 @@ void my_main() {
 
                     printf("Line: from: %6.2f %6.2f %6.2f to: %6.2f %6.2f %6.2f",
                             x0, y0, z0, x1, y1, z1);
-                    if (symbols != NULL) {
-                        printf("\n\tConstants: %s", symbols -> name);
-                    }
-                    if (op[i].op.line.cs0 != NULL) {
-                        printf("\n\tCS0: %s", op[i].op.line.cs0 -> name);
-                    }
-                    if (op[i].op.line.cs1 != NULL) {
-                        printf("\n\tCS1: %s", op[i].op.line.cs1 -> name);
-                    }
 
                     add_edge(temp, x0, y0, z0, x1, y1, z1);
 
@@ -659,17 +587,24 @@ void my_main() {
                 
                 case MESH: {
                     char * name = op[i].op.mesh.name;
-                    printf("Mesh: filename: %s", name);
-
                     SYMTAB * symbols = op[i].op.box.constants;
+
+                    add_mesh(temp, name);
+                    struct matrix * matrix = peek(systems);
+                    matrix_mult(matrix, temp);
+
+                    printf("Mesh: filename: %s", name);
 
                     if (symbols != NULL) {
                         printf("\tconstants: %s", symbols -> name);
+
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
                     }
                     else {
-                        
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
                     }
 
+                    temp -> lastcol = 0;
                     break;
                 }
 
@@ -736,14 +671,6 @@ void my_main() {
                     break;
                 }
 
-                // case TWEEN:
-                //     printf("Tween: %4.0f %4.0f, %s %s",
-                //         op[i].op.tween.start_frame,
-                //         op[i].op.tween.end_frame,
-                //         op[i].op.tween.knob_list0 -> name,
-                //         op[i].op.tween.knob_list1 -> name);
-                //     break;
-
                 case PUSH:
                     printf("Push");
                     push(systems);
@@ -755,10 +682,6 @@ void my_main() {
                     pop(systems);
 
                     break;
-
-                // case GENERATE_RAYFILES:
-                //     printf("Generate Ray Files");
-                //     break;
 
                 case SAVE: {
                     char * name = op[i].op.save.p -> name;
@@ -780,10 +703,6 @@ void my_main() {
 
                     break;
                 }
-
-                // case FOCAL:
-                //     printf("Focal: %f", op[i].op.focal.value);
-                //     break;
 
                 case DISPLAY:
                     printf("Display");

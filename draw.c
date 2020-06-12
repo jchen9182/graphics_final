@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "ml6.h"
 #include "display.h"
@@ -10,10 +11,10 @@
 #include "symtab.h"
 
 // scanline helper function
-void add_color(color * a, color * b) {
-    a -> red += b -> red;
-    a -> green += b -> green;
-    a-> blue += b -> blue;
+void add_color(color * a, color b) {
+    a -> red += b.red;
+    a -> green += b.green;
+    a-> blue += b.blue;
 }
 void swapc(color *a, color *b) {
     color temp = *a;
@@ -50,11 +51,11 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
     }
 
     while (x < ceil(x1)) {
-        plot(s, zb, c1, x, y, z);
+        plot(s, zb, c0, x, y, z);
         
         z += mz;
         x++;
-        if (type == GOURAUD) add_color(&c0, &mc);
+        if (type == GOURAUD) add_color(&c0, mc);
     }
 }
 
@@ -63,6 +64,9 @@ void swap(double *a, double *b) {
     double temp = *a;
     *a = *b;
     *b = temp;
+}
+void print_color(color c) {
+    printf("%u %u %u\n", c.red, c.green, c.blue);
 }
 /*======== void scanline_convert() ==========
   Inputs: struct matrix *points
@@ -129,9 +133,11 @@ void scanline_convert(  struct matrix * points, int col,
         mc0.red = dist0 > 0 ? (ct.red - cb.red) / dist0 : 0;
         mc0.green = dist0 > 0 ? (ct.green - cb.green) / dist0 : 0;
         mc0.blue = dist0 > 0 ? (ct.blue - cb.blue) / dist0 : 0;
+
         mc1.red = dist1 > 0 ? (cm.red - cb.red) / dist1 : 0;
         mc1.green = dist1 > 0 ? (cm.green - cb.green) / dist1 : 0;
         mc1.blue = dist1 > 0 ? (cm.blue - cb.blue) / dist1 : 0;
+
         mc2.red = dist2 > 0 ? (ct.red - cm.red) / dist2 : 0;
         mc2.green = dist2 > 0 ? (ct.green - cm.green) / dist2 : 0;
         mc2.blue = dist2 > 0 ? (ct.blue - cm.blue) / dist2 : 0;
@@ -186,8 +192,8 @@ void scanline_convert(  struct matrix * points, int col,
         z1 += mz1;
         y++;
         if (type == GOURAUD) {
-            add_color(&c0, &mc0);
-            add_color(&c1, &mc1);
+            add_color(&c0, mc0);
+            add_color(&c1, mc1);
         }
     }
 }
@@ -285,37 +291,113 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
         for (int col = 0; col < lastcol; col++) {
             if (type == GOURAUD) {
                 double averageNormal[3] = {0, 0, 0};
-                int sharedPolygons = 0;
 
                 for (int c = 0; c < lastcol - 2; c += 3) {
                     if (compare(matrix, col, c)) {
                         double * normal = calculate_normal(polygons, c);
-
-                        if (normal[2] > 0) {
-                            averageNormal[0] += normal[0];
-                            averageNormal[1] += normal[1];
-                            averageNormal[2] += normal[2];
-
-                            sharedPolygons++;
-                        }
+                    
+                        averageNormal[0] += normal[0];
+                        averageNormal[1] += normal[1];
+                        averageNormal[2] += normal[2];
                     }
                 }
-
-                averageNormal[0] /= sharedPolygons;
-                averageNormal[1] /= sharedPolygons;
-                averageNormal[2] /= sharedPolygons;
 
                 colors[counter] = get_lighting(averageNormal, view, ambient, light, reflect);
 
                 counter++;
                 if (counter % 3 == 0 && col > 0) {
-                    scanline_convert(polygons, col - 2, s, zb, colors, type);
+                    double * normal = calculate_normal(polygons, col - 2);
+
+                    if (normal[2] > 0) {
+                        scanline_convert(polygons, col - 2, s, zb, colors, type);
+                    }
                     counter = 0;
                 }
             }
             else { // type = PHONG
 
             }
+        }
+    }
+}
+
+void add_mesh(struct matrix * polygons, char * filename) {
+    FILE * fp;
+    char buffer[255];
+
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        printf("Couldn't Open File.\n");
+        return;
+    }
+    else {
+        // Find number of v, vn, and f
+        int vnum = 0;
+        int normnum = 0;
+        int fnum = 0;
+        while (fgets(buffer, 255, fp)) {
+            if (buffer[0] == 'v') {
+                (buffer[1] == 'n') ? normnum++ : vnum++;
+            }
+            else if (buffer[0] == 'f') fnum++;
+        }
+
+        // Store vertex and face data
+        double vertices[vnum][3];
+        double faces[fnum][2][3];
+        int vcounter = 0;
+        int fcounter = 0;
+        fseek(fp, 0, SEEK_SET);
+        
+        while (fgets(buffer, 255, fp)) {
+            if (buffer[0] == 'v') {
+                if (buffer[1] == 'n') {
+
+                }
+                else {
+                    double x, y, z;
+
+                    sscanf(buffer, "v %le %le %le", &x, &y, &z);
+                    vertices[vcounter][0] = x;
+                    vertices[vcounter][1] = y;
+                    vertices[vcounter][2] = z;
+
+                    vcounter++;
+                }
+            }
+            else if(buffer[0] == 'f') {
+                // only works with a//b and a/b/c formats
+                double v0, vn0, vt0, v1, vn1, vt1, v2, vn2, vt2; // don't care about vt
+
+                for (int i = 1; i < strlen(buffer) - 1; i++) {
+                    if (buffer[i] == '/' && buffer[i] == buffer[i + 1]) {
+                        sscanf(buffer, "f %le//%le %le//%le %le//%le", 
+                        &v0, &vn0, &v1, &vn1, &v2, &vn2);
+                    }
+                    else {
+                        sscanf(buffer, "f %le/%le/%le %le/%le/%le %le/%le/%le", 
+                        &v0, &vt0, &vn0, &v1, &vt1, &vn1, &v2, &vt2, &vn2);
+                    }
+                }
+                faces[fcounter][0][0] = v0;
+                faces[fcounter][0][1] = v1;
+                faces[fcounter][0][2] = v2;
+                faces[fcounter][1][0] = vn0;
+                faces[fcounter][1][1] = vn1;
+                faces[fcounter][1][2] = vn2;
+
+                fcounter++;
+            }
+        }
+
+        // Add polygons
+        for (int f = 0; f < fnum; f++) {
+            int v0 = faces[f][0][0];
+            int v1 = faces[f][0][1];
+            int v2 = faces[f][0][2];
+            //printf("%d %d %d\n", v0, v1, v2);
+            printf("%f %f %f\n", vertices[v0][0], vertices[v1][1], vertices[v2][2]);
+            add_point(polygons, vertices[v0][0], vertices[v1][1], vertices[v2][2]);
         }
     }
 }
