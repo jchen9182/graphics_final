@@ -366,7 +366,7 @@ void add_mesh(struct matrix * polygons, char * filename) {
                 }
             }
             else if(buffer[0] == 'f') {
-                // only works with a//b and a/b/c formats
+                // only works with v//vn and v/vt/vn formats
                 double v0, vn0, vt0, v1, vn1, vt1, v2, vn2, vt2; // don't care about vt
 
                 for (int i = 1; i < strlen(buffer) - 1; i++) {
@@ -392,12 +392,14 @@ void add_mesh(struct matrix * polygons, char * filename) {
 
         // Add polygons
         for (int f = 0; f < fnum; f++) {
-            int v0 = faces[f][0][0];
-            int v1 = faces[f][0][1];
-            int v2 = faces[f][0][2];
-            //printf("%d %d %d\n", v0, v1, v2);
-            printf("%f %f %f\n", vertices[v0][0], vertices[v1][1], vertices[v2][2]);
-            add_point(polygons, vertices[v0][0], vertices[v1][1], vertices[v2][2]);
+            int v0 = faces[f][0][0] - 1;
+            int v1 = faces[f][0][1] - 1;
+            int v2 = faces[f][0][2] - 1;
+
+            add_polygon(polygons, 
+            vertices[v0][0], vertices[v0][1], vertices[v0][2],
+            vertices[v1][0], vertices[v1][1], vertices[v1][2],
+            vertices[v2][0], vertices[v2][1], vertices[v2][2]);
         }
     }
 }
