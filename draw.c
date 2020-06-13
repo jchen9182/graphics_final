@@ -247,7 +247,7 @@ int compare(double ** matrix, int thisCol, int compareCol) {
   ====================*/
 void draw_polygons( struct matrix * polygons, screen s, zbuffer zb, 
                     double * view, double light[2][3], color ambient,
-                    struct constants * reflect, int type) {
+                    struct constants * reflect, int type, struct matrix * vns) {
     int lastcol = polygons -> lastcol;
     double ** matrix = polygons -> m;
 
@@ -285,37 +285,42 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
     }
 
     else {
-        color colors[3];
-        int counter = 0;
+        if (vns -> lastcol > 0) { // mesh
 
-        for (int col = 0; col < lastcol; col++) {
-            if (type == GOURAUD) {
-                double averageNormal[3] = {0, 0, 0};
+        }
+        else { // regular shapes
+            color colors[3];
+            int counter = 0;
 
-                for (int c = 0; c < lastcol - 2; c += 3) {
-                    if (compare(matrix, col, c)) {
-                        double * normal = calculate_normal(polygons, c);
-                    
-                        averageNormal[0] += normal[0];
-                        averageNormal[1] += normal[1];
-                        averageNormal[2] += normal[2];
+            for (int col = 0; col < lastcol; col++) {
+                if (type == GOURAUD) {
+                    double averageNormal[3] = {0, 0, 0};
+
+                    for (int c = 0; c < lastcol - 2; c += 3) {
+                        if (compare(matrix, col, c)) {
+                            double * normal = calculate_normal(polygons, c);
+                        
+                            averageNormal[0] += normal[0];
+                            averageNormal[1] += normal[1];
+                            averageNormal[2] += normal[2];
+                        }
+                    }
+
+                    colors[counter] = get_lighting(averageNormal, view, ambient, light, reflect);
+
+                    counter++;
+                    if (counter % 3 == 0 && col > 0) {
+                        double * normal = calculate_normal(polygons, col - 2);
+
+                        if (normal[2] > 0) {
+                            scanline_convert(polygons, col - 2, s, zb, colors, type);
+                        }
+                        counter = 0;
                     }
                 }
+                else { // type = PHONG
 
-                colors[counter] = get_lighting(averageNormal, view, ambient, light, reflect);
-
-                counter++;
-                if (counter % 3 == 0 && col > 0) {
-                    double * normal = calculate_normal(polygons, col - 2);
-
-                    if (normal[2] > 0) {
-                        scanline_convert(polygons, col - 2, s, zb, colors, type);
-                    }
-                    counter = 0;
                 }
-            }
-            else { // type = PHONG
-
             }
         }
     }
@@ -336,14 +341,16 @@ void add_mesh(struct matrix * polygons, struct matrix * vns, char * filename) {
         int normnum = 0;
         while (fgets(buffer, 255, fp)) {
             if (buffer[0] == 'v') {
-                if (buffer[1] == 'n')normnum++;
+                if (buffer[1] == 'n') normnum++;
                 else vnum++;
             }
         }
 
         // Store vertex and face data
         double vertices[vnum][3];
+        double vertnorms[normnum][3];
         int vcounter = 0;
+        int vncounter = 0;
         fseek(fp, 0, SEEK_SET);
 
         while (fgets(buffer, 255, fp)) {
@@ -351,13 +358,18 @@ void add_mesh(struct matrix * polygons, struct matrix * vns, char * filename) {
                 if (buffer[1] == 'n') {
                     double x, y, z;
                     
-                    if (buffer[3] == ' ') {
+                    if (buffer[3] == ' ') { 
+                        // Accounts for the extra space when there are negative numbers
                         sscanf(buffer, "vn  %le %le %le", &x, &y, &z);
                     }
                     else {
                         sscanf(buffer, "vn %le %le %le", &x, &y, &z);
                     }
-                    add_point(vns, x, y, z);
+                    vertnorms[vncounter][0] = x;
+                    vertnorms[vncounter][1] = y;
+                    vertnorms[vncounter][2] = z;
+
+                    vncounter++;
                 }
                 else if (buffer[1] == ' '){
                     double x, y, z;
@@ -415,11 +427,19 @@ void add_mesh(struct matrix * polygons, struct matrix * vns, char * filename) {
                     vertices[v0 - 1][0], vertices[v0 - 1][1], vertices[v0 - 1][2],
                     vertices[v1 - 1][0], vertices[v1 - 1][1], vertices[v1 - 1][2],
                     vertices[v2 - 1][0], vertices[v2 - 1][1], vertices[v2 - 1][2]);
+                add_polygon(vns, 
+                    vertnorms[vn0 - 1][0], vertnorms[vn0 - 1][1], vertnorms[vn0 - 1][2],
+                    vertnorms[vn1 - 1][0], vertnorms[vn1 - 1][1], vertnorms[vn1 - 1][2],
+                    vertnorms[vn2 - 1][0], vertnorms[vn2 - 1][1], vertnorms[vn2 - 1][2]);
                 if (slashCounter > 6) {
                     add_polygon(polygons, 
                     vertices[v0 - 1][0], vertices[v0 - 1][1], vertices[v0 - 1][2],
                     vertices[v2 - 1][0], vertices[v2 - 1][1], vertices[v2 - 1][2],
                     vertices[v3 - 1][0], vertices[v3 - 1][1], vertices[v3 - 1][2]);
+                    add_polygon(vns, 
+                    vertnorms[vn0 - 1][0], vertnorms[vn0 - 1][1], vertnorms[vn0 - 1][2],
+                    vertnorms[vn2 - 1][0], vertnorms[vn2 - 1][1], vertnorms[vn2 - 1][2],
+                    vertnorms[vn3 - 1][0], vertnorms[vn3 - 1][1], vertnorms[vn3 - 1][2]);
                 }
             }
         }

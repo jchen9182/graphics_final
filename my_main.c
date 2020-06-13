@@ -233,8 +233,10 @@ void my_main() {
         for (int frame = 0; frame < num_frames; frame++) {
             // Reset Screen
             struct matrix * temp;
+            struct matrix * vns;
             struct stack * systems;
             temp = new_matrix(4, 1000);
+            vns = new_matrix(4, 1000);
             systems = new_stack();
             clear_screen(s);
 	        clear_zbuffer(zb);
@@ -271,10 +273,12 @@ void my_main() {
                         matrix_mult(matrix, temp);
 
                         if (symbols != NULL) {
-                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
+                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, 
+                            type, vns);
                         }
                         else {
-                            draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
+                            draw_polygons(temp, s, zb, view, light, ambient, reflect, 
+                            type, vns);
                         }
 
                         temp -> lastcol = 0;
@@ -294,10 +298,12 @@ void my_main() {
                         matrix_mult(matrix, temp);
 
                         if (symbols != NULL) {
-                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
+                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, 
+                            type, vns);
                         }
                         else {
-                            draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
+                            draw_polygons(temp, s, zb, view, light, ambient, reflect, 
+                            type, vns);
                         }
 
                         temp -> lastcol = 0;
@@ -318,10 +324,12 @@ void my_main() {
                         matrix_mult(matrix, temp);
 
                         if (symbols != NULL) {
-                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
+                            draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, 
+                            type, vns);
                         }
                         else {
-                            draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
+                            draw_polygons(temp, s, zb, view, light, ambient, reflect, 
+                            type, vns);
                         }
 
                         temp -> lastcol = 0;
@@ -355,13 +363,26 @@ void my_main() {
                         break;
                     }
                     
-                    // case MESH:
-                    //     printf("Mesh: filename: %s", op[i].op.mesh.name);
-                    //     if (op[i].op.mesh.constants != NULL)
-                    //     {
-                    //         printf("\tconstants: %s", op[i].op.mesh.constants -> name);
-                    //     }
-                    //     break;
+                case MESH: {
+                    char * name = op[i].op.mesh.name;
+                    SYMTAB * symbols = op[i].op.box.constants;
+
+                    add_mesh(temp, vns, name);
+                    struct matrix * matrix = peek(systems);
+                    matrix_mult(matrix, temp);
+
+                    if (symbols != NULL) {
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, 
+                        type, vns);
+                    }
+                    else {
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, 
+                        type, vns);
+                    }
+
+                    temp -> lastcol = 0;
+                    break;
+                }
 
                     case MOVE: {
                         double x = op[i].op.move.d[0];
@@ -497,12 +518,13 @@ void my_main() {
                     if (symbols != NULL) {
                         printf("\tconstants: %s", symbols -> name);
 
-                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, 
+                        type, vns);
                     }
                     else {
-                        draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, 
+                        type, vns);
                     }
-
                     temp -> lastcol = 0;
                     break;
                 }
@@ -525,10 +547,12 @@ void my_main() {
                     if (symbols != NULL) {
                         printf("\tconstants: %s", symbols -> name);
 
-                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, 
+                        type, vns);
                     }
                     else {
-                        draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, 
+                        type, vns);
                     }
 
                     temp -> lastcol = 0;
@@ -554,10 +578,12 @@ void my_main() {
                     if (symbols != NULL) {
                         printf("\tconstants: %s", symbols -> name);
 
-                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, 
+                        type, vns);
                     }
                     else {
-                        draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, 
+                        type, vns);
                     }
 
                     temp -> lastcol = 0;
@@ -600,12 +626,14 @@ void my_main() {
                     if (symbols != NULL) {
                         printf("\tconstants: %s", symbols -> name);
 
-                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, type);
+                        draw_polygons(temp, s, zb, view, light, ambient, symbols -> s.c, 
+                        type, vns);
                     }
                     else {
-                        draw_polygons(temp, s, zb, view, light, ambient, reflect, type);
+                        draw_polygons(temp, s, zb, view, light, ambient, reflect, 
+                        type, vns);
                     }
-
+                    
                     temp -> lastcol = 0;
                     break;
                 }

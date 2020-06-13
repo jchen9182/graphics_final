@@ -24,7 +24,7 @@ void add_polygons( struct matrix * polygons,
                    double x2, double y2, double z2);
 void draw_polygons( struct matrix * polygons, screen s, zbuffer zb, 
                     double * view, double light[2][3], color ambient,
-                    struct constants * reflect, int type);
+                    struct constants * reflect, int type, struct matrix * vns);
 
 // Advanced shapes
 // 3D shapes
