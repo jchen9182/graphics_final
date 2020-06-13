@@ -11,10 +11,12 @@
 #include "symtab.h"
 
 // scanline helper function
-void add_color(color * a, color b) {
-    a -> red += b.red;
-    a -> green += b.green;
-    a-> blue += b.blue;
+color calc_color(color a, double * b, int counter) {
+    color c;
+    c.red = a.red + (int) (counter * b[0]);
+    c.green = a.green + (int) (counter * b[1]);
+    c.blue = a.blue + (int) (counter * b[2]);
+    return c;
 }
 void swapc(color *a, color *b) {
     color temp = *a;
@@ -43,19 +45,22 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
     double mz = (x1 - x0) > 0 ? (z1 - z0) / dist : 0;
     double z = z0 + mz * offx;
 
-    color mc;
+    double mc[3];
     if (type == GOURAUD) {
-        mc.red = (c1.red - c0.red) / dist;
-        mc.green = (c1.green - c0.green) / dist;
-        mc.blue = (c1.blue - c0.blue) / dist;
+        mc[0] = (c1.red - c0.red) / dist;
+        mc[1] = (c1.green - c0.green) / dist;
+        mc[2] = (c1.blue - c0.blue) / dist;
     }
 
+    color c = c0;
     while (x < ceil(x1)) {
-        plot(s, zb, c0, x, y, z);
+        plot(s, zb, c, x, y, z);
 
         z += mz;
         x++;
-        if (type == GOURAUD) add_color(&c0, mc);
+        if (type == GOURAUD) {
+            c = calc_color(c0, mc, x - ceil(x0));
+        }
     }
 }
 
@@ -65,7 +70,7 @@ void swap(double *a, double *b) {
     *a = *b;
     *b = temp;
 }
-void print_color(color c) {
+void print_color(color c) { // debugging help
     printf("%u %u %u\n", c.red, c.green, c.blue);
 }
 /*======== void scanline_convert() ==========
@@ -128,17 +133,19 @@ void scanline_convert(  struct matrix * points, int col,
     double mz1 = dist1 > 0 ? (zm - zb) / dist1 : 0;
     double mz2 = dist2 > 0 ? (zt - zm) / dist2 : 0;
 
-    color mc0, mc1, mc2;
+    double mc0[3];
+    double mc1[3];
+    double mc2[3];
     if (type == GOURAUD) {
-        mc0.red = dist0 > 0 ? (ct.red - cb.red) / dist0 : 0;
-        mc0.green = dist0 > 0 ? (ct.green - cb.green) / dist0 : 0;
-        mc0.blue = dist0 > 0 ? (ct.blue - cb.blue) / dist0 : 0;
-        mc1.red = dist1 > 0 ? (cm.red - cb.red) / dist1 : 0;
-        mc1.green = dist1 > 0 ? (cm.green - cb.green) / dist1 : 0;
-        mc1.blue = dist1 > 0 ? (cm.blue - cb.blue) / dist1 : 0;
-        mc2.red = dist2 > 0 ? (ct.red - cm.red) / dist2 : 0;
-        mc2.green = dist2 > 0 ? (ct.green - cm.green) / dist2 : 0;
-        mc2.blue = dist2 > 0 ? (ct.blue - cm.blue) / dist2 : 0;
+        mc0[0] = dist0 > 0 ? (ct.red - cb.red) / dist0 : 0;
+        mc0[1] = dist0 > 0 ? (ct.green - cb.green) / dist0 : 0;
+        mc0[2] = dist0 > 0 ? (ct.blue - cb.blue) / dist0 : 0;
+        mc1[0] = dist1 > 0 ? (cm.red - cb.red) / dist1 : 0;
+        mc1[1] = dist1 > 0 ? (cm.green - cb.green) / dist1 : 0;
+        mc1[2] = dist1 > 0 ? (cm.blue - cb.blue) / dist1 : 0;
+        mc2[0] = dist2 > 0 ? (ct.red - cm.red) / dist2 : 0;
+        mc2[1] = dist2 > 0 ? (ct.green - cm.green) / dist2 : 0;
+        mc2[2] = dist2 > 0 ? (ct.blue - cm.blue) / dist2 : 0;
     }
 
     double offy0 = ceil(yb) - yb;
@@ -154,7 +161,7 @@ void scanline_convert(  struct matrix * points, int col,
     
     color c0 = cb;
     color c1 = cb;
-    color c2 = cm;
+    color cinit = cb;
     
     int toggle = 1;
     while (y < ceil(yt)) {
@@ -166,11 +173,16 @@ void scanline_convert(  struct matrix * points, int col,
             mx1 = mx2;
             mz1 = mz2;
             if (type == GOURAUD) {
-                c1 = c2;
-                mc1 = mc2;
+                c1 = cm;
+                cinit = cm;
+
+                mc1[0] = mc2[0];
+                mc1[1] = mc2[1];
+                mc1[2] = mc2[2];
             }
             toggle = 0;
         }
+
         if (x0 > x1) {
             offx = ceil(x1) - x1;
         }
@@ -190,8 +202,10 @@ void scanline_convert(  struct matrix * points, int col,
         z1 += mz1;
         y++;
         if (type == GOURAUD) {
-            add_color(&c0, mc0);
-            add_color(&c1, mc1);
+            int counter = y - ceil(yb);
+
+            c0 = calc_color(cb, mc0, counter);
+            c1 = calc_color(cinit, mc1, counter);
         }
     }
 }
@@ -298,8 +312,7 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
                     colors[i] =  get_lighting(n, view, ambient, light, reflect);
                 }
                 if (type == GOURAUD) {
-                    double * normal = calculate_normal(polygons, col);
-                    if (normal[2] > 0) {
+                    if (normals[2][col]> 0) {
                         scanline_convert(polygons, col, s, zb, colors, type);
                     }
                 }
@@ -310,19 +323,19 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
             int counter = 0;
 
             for (int col = 0; col < lastcol; col++) {
-                if (type == GOURAUD) {
-                    double averageNormal[3] = {0, 0, 0};
+                double averageNormal[3] = {0, 0, 0};
 
-                    for (int c = 0; c < lastcol - 2; c += 3) {
-                        if (compare(matrix, col, c)) {
-                            double * normal = calculate_normal(polygons, c);
-                        
+                for (int c = 0; c < lastcol - 2; c += 3) {
+                    if (compare(matrix, col, c)) {
+                        double * normal = calculate_normal(polygons, c);
+                        if (normal[2] > 0) {
                             averageNormal[0] += normal[0];
                             averageNormal[1] += normal[1];
                             averageNormal[2] += normal[2];
                         }
                     }
-
+                }
+                if (type == GOURAUD) {
                     colors[counter] = get_lighting(averageNormal, view, ambient, light, reflect);
 
                     counter++;
@@ -335,6 +348,7 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
                         counter = 0;
                     }
                 }
+
                 else { // type = PHONG
 
                 }

@@ -21,7 +21,7 @@ shading gouraud
 push
 move 250 250 0
 scale 5 5 5
-mesh shiny_purple: ball.obj
+mesh: ball.obj
 
 // Test
 //shading gouraud
