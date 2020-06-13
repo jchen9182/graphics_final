@@ -348,13 +348,13 @@ void add_mesh(struct matrix * polygons, char * filename) {
         int vcounter = 0;
         int fcounter = 0;
         fseek(fp, 0, SEEK_SET);
-        
+
         while (fgets(buffer, 255, fp)) {
             if (buffer[0] == 'v') {
                 if (buffer[1] == 'n') {
 
                 }
-                else {
+                else if (buffer[1] != 't'){
                     double x, y, z;
 
                     sscanf(buffer, "v %le %le %le", &x, &y, &z);
@@ -367,18 +367,25 @@ void add_mesh(struct matrix * polygons, char * filename) {
             }
             else if(buffer[0] == 'f') {
                 // only works with v//vn and v/vt/vn formats
-                double v0, vn0, vt0, v1, vn1, vt1, v2, vn2, vt2; // don't care about vt
+                int v0, vn0, vt0, v1, vn1, vt1, v2, vn2, vt2; // don't care about vt
 
                 for (int i = 1; i < strlen(buffer) - 1; i++) {
                     if (buffer[i] == '/' && buffer[i] == buffer[i + 1]) {
-                        sscanf(buffer, "f %le//%le %le//%le %le//%le", 
+                        sscanf(buffer, "f %d//%d %d//%d %d//%d", 
                         &v0, &vn0, &v1, &vn1, &v2, &vn2);
                     }
                     else {
-                        sscanf(buffer, "f %le/%le/%le %le/%le/%le %le/%le/%le", 
+                        sscanf(buffer, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
                         &v0, &vt0, &vn0, &v1, &vt1, &vn1, &v2, &vt2, &vn2);
                     }
                 }
+
+                //vcounter = 0;
+                // add_polygon(polygons, 
+                //     vertices[v0 - 1][0], vertices[v0 - 1][1], vertices[v0 - 1][2],
+                //     vertices[v1 - 1][0], vertices[v1 - 1][1], vertices[v1 - 1][2],
+                //     vertices[v2 - 1][0], vertices[v2 - 1][1], vertices[v2 - 1][2]);
+
                 faces[fcounter][0][0] = v0;
                 faces[fcounter][0][1] = v1;
                 faces[fcounter][0][2] = v2;

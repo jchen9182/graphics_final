@@ -1,0 +1,4 @@
+push
+move 250 250 0
+mesh: h.obj
+display
