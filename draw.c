@@ -321,7 +321,7 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
     }
 }
 
-void add_mesh(struct matrix * polygons, char * filename) {
+void add_mesh(struct matrix * polygons, struct matrix * vns, char * filename) {
     FILE * fp;
     char buffer[255];
 
@@ -331,33 +331,43 @@ void add_mesh(struct matrix * polygons, char * filename) {
         return;
     }
     else {
-        // Find number of v, vn, and f
+        // Find number of v, vn
         int vnum = 0;
         int normnum = 0;
-        int fnum = 0;
         while (fgets(buffer, 255, fp)) {
             if (buffer[0] == 'v') {
-                (buffer[1] == 'n') ? normnum++ : vnum++;
+                if (buffer[1] == 'n')normnum++;
+                else vnum++;
             }
-            else if (buffer[0] == 'f') fnum++;
         }
 
         // Store vertex and face data
         double vertices[vnum][3];
-        double faces[fnum][2][3];
         int vcounter = 0;
-        int fcounter = 0;
         fseek(fp, 0, SEEK_SET);
 
         while (fgets(buffer, 255, fp)) {
             if (buffer[0] == 'v') {
                 if (buffer[1] == 'n') {
-
+                    double x, y, z;
+                    
+                    if (buffer[3] == ' ') {
+                        sscanf(buffer, "vn  %le %le %le", &x, &y, &z);
+                    }
+                    else {
+                        sscanf(buffer, "vn %le %le %le", &x, &y, &z);
+                    }
+                    add_point(vns, x, y, z);
                 }
-                else if (buffer[1] != 't'){
+                else if (buffer[1] == ' '){
                     double x, y, z;
 
-                    sscanf(buffer, "v %le %le %le", &x, &y, &z);
+                    if (buffer[2] == ' ') {
+                        sscanf(buffer, "v  %le %le %le", &x, &y, &z);
+                    }
+                    else {
+                        sscanf(buffer, "v %le %le %le", &x, &y, &z);
+                    }
                     vertices[vcounter][0] = x;
                     vertices[vcounter][1] = y;
                     vertices[vcounter][2] = z;
@@ -367,46 +377,51 @@ void add_mesh(struct matrix * polygons, char * filename) {
             }
             else if(buffer[0] == 'f') {
                 // only works with v//vn and v/vt/vn formats
-                int v0, vn0, vt0, v1, vn1, vt1, v2, vn2, vt2; // don't care about vt
+                int v0, vn0, vt0, v1, vn1, vt1, v2, vn2, vt2, v3, vn3, vt3;
 
-                for (int i = 1; i < strlen(buffer) - 1; i++) {
-                    if (buffer[i] == '/' && buffer[i] == buffer[i + 1]) {
-                        sscanf(buffer, "f %d//%d %d//%d %d//%d", 
-                        &v0, &vn0, &v1, &vn1, &v2, &vn2);
-                    }
-                    else {
+                int slashCounter = 0;
+                int hasTexture = 1;
+
+                for (int i = 1; i < strlen(buffer); i++) {
+                    if (buffer[i] == '/') slashCounter++;
+                    if (buffer[i] == '/' && buffer[i] == buffer[i + 1])
+                        hasTexture = 0;
+                }
+
+                if (slashCounter < 6) { // triangle faces
+                    if (hasTexture) {
                         sscanf(buffer, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
                         &v0, &vt0, &vn0, &v1, &vt1, &vn1, &v2, &vt2, &vn2);
                     }
+                    else {
+                        sscanf(buffer, "f %d//%d %d//%d %d//%d", 
+                        &v0, &vn0, &v1, &vn1, &v2, &vn2);
+                    }
+                }
+                else { // quadrilateral faces
+                    if (hasTexture) {
+                        sscanf(buffer, "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d", 
+                        &v0, &vt0, &vn0, &v1, &vt1, &vn1, 
+                        &v2, &vt2, &vn2, &v3, &vt3, &vn3);
+                    }
+                    else {
+                        sscanf(buffer, "f %d//%d %d//%d %d//%d %d//%d", 
+                        &v0, &vn0, &v1, &vn1, &v2, &vn2, &v3, &vn3);
+                    }
                 }
 
-                //vcounter = 0;
-                // add_polygon(polygons, 
-                //     vertices[v0 - 1][0], vertices[v0 - 1][1], vertices[v0 - 1][2],
-                //     vertices[v1 - 1][0], vertices[v1 - 1][1], vertices[v1 - 1][2],
-                //     vertices[v2 - 1][0], vertices[v2 - 1][1], vertices[v2 - 1][2]);
-
-                faces[fcounter][0][0] = v0;
-                faces[fcounter][0][1] = v1;
-                faces[fcounter][0][2] = v2;
-                faces[fcounter][1][0] = vn0;
-                faces[fcounter][1][1] = vn1;
-                faces[fcounter][1][2] = vn2;
-
-                fcounter++;
+                // This only works for obj files where all the faces are at the end of the file
+                add_polygon(polygons, 
+                    vertices[v0 - 1][0], vertices[v0 - 1][1], vertices[v0 - 1][2],
+                    vertices[v1 - 1][0], vertices[v1 - 1][1], vertices[v1 - 1][2],
+                    vertices[v2 - 1][0], vertices[v2 - 1][1], vertices[v2 - 1][2]);
+                if (slashCounter > 6) {
+                    add_polygon(polygons, 
+                    vertices[v0 - 1][0], vertices[v0 - 1][1], vertices[v0 - 1][2],
+                    vertices[v2 - 1][0], vertices[v2 - 1][1], vertices[v2 - 1][2],
+                    vertices[v3 - 1][0], vertices[v3 - 1][1], vertices[v3 - 1][2]);
+                }
             }
-        }
-
-        // Add polygons
-        for (int f = 0; f < fnum; f++) {
-            int v0 = faces[f][0][0] - 1;
-            int v1 = faces[f][0][1] - 1;
-            int v2 = faces[f][0][2] - 1;
-
-            add_polygon(polygons, 
-            vertices[v0][0], vertices[v0][1], vertices[v0][2],
-            vertices[v1][0], vertices[v1][1], vertices[v1][2],
-            vertices[v2][0], vertices[v2][1], vertices[v2][2]);
         }
     }
 }

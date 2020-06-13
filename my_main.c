@@ -461,8 +461,10 @@ void my_main() {
     else {
         // Reset Screen
         struct matrix * temp;
+        struct matrix * vns;
         struct stack * systems;
         temp = new_matrix(4, 1000);
+        vns = new_matrix(4, 1000);
         systems = new_stack();
         clear_screen(s);
 	    clear_zbuffer(zb);
@@ -589,7 +591,7 @@ void my_main() {
                     char * name = op[i].op.mesh.name;
                     SYMTAB * symbols = op[i].op.box.constants;
 
-                    add_mesh(temp, name);
+                    add_mesh(temp, vns, name);
                     struct matrix * matrix = peek(systems);
                     matrix_mult(matrix, temp);
 
