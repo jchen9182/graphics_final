@@ -3,6 +3,6 @@
 ## Implemented Features:
   - shading [wireframe/flat/gouraud/phong]
   - mesh [constants]: filename
-    * Only supports triangle faces
+    * Works with triangle and quadrilateral faces
     * shading is compatible with mesh
 

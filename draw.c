@@ -133,11 +133,9 @@ void scanline_convert(  struct matrix * points, int col,
         mc0.red = dist0 > 0 ? (ct.red - cb.red) / dist0 : 0;
         mc0.green = dist0 > 0 ? (ct.green - cb.green) / dist0 : 0;
         mc0.blue = dist0 > 0 ? (ct.blue - cb.blue) / dist0 : 0;
-
         mc1.red = dist1 > 0 ? (cm.red - cb.red) / dist1 : 0;
         mc1.green = dist1 > 0 ? (cm.green - cb.green) / dist1 : 0;
         mc1.blue = dist1 > 0 ? (cm.blue - cb.blue) / dist1 : 0;
-
         mc2.red = dist2 > 0 ? (ct.red - cm.red) / dist2 : 0;
         mc2.green = dist2 > 0 ? (ct.green - cm.green) / dist2 : 0;
         mc2.blue = dist2 > 0 ? (ct.blue - cm.blue) / dist2 : 0;
