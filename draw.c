@@ -52,7 +52,7 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
 
     while (x < ceil(x1)) {
         plot(s, zb, c0, x, y, z);
-        
+
         z += mz;
         x++;
         if (type == GOURAUD) add_color(&c0, mc);
@@ -286,7 +286,26 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
 
     else {
         if (vns -> lastcol > 0) { // mesh
+            color colors[3];
 
+            for (int col = 0; col < lastcol - 2; col += 3) {
+                double ** normals = vns -> m;
+
+                for (int i = 0; i < 3; i++) {
+                    double x = normals[0][col + i];
+                    double y = normals[1][col + i];
+                    double z = normals[2][col + i];
+                    double n[3] = {x, y, z};
+
+                    colors[i] =  get_lighting(n, view, ambient, light, reflect);
+                }
+                if (type == GOURAUD) {
+                    double * normal = calculate_normal(polygons, col);
+                    if (normal[2] > 0) {
+                        scanline_convert(polygons, col, s, zb, colors, type);
+                    }
+                }
+            }
         }
         else { // regular shapes
             color colors[3];
