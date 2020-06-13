@@ -18,6 +18,9 @@ color calc_color(color a, double * b, int counter) {
     c.blue = a.blue + (int) (counter * b[2]);
     return c;
 }
+void print_color(color c) { // debugging help
+    printf("%u %u %u\n", c.red, c.green, c.blue);
+}
 void swapc(color *a, color *b) {
     color temp = *a;
     *a = *b;
@@ -69,9 +72,6 @@ void swap(double *a, double *b) {
     double temp = *a;
     *a = *b;
     *b = temp;
-}
-void print_color(color c) { // debugging help
-    printf("%u %u %u\n", c.red, c.green, c.blue);
 }
 /*======== void scanline_convert() ==========
   Inputs: struct matrix *points
@@ -202,10 +202,11 @@ void scanline_convert(  struct matrix * points, int col,
         z1 += mz1;
         y++;
         if (type == GOURAUD) {
-            int counter = y - ceil(yb);
+            int counter0 = y - ceil(yb);
+            int counter1 = (y >= ceil(ym)) ? y - ceil(ym) : counter0;
 
-            c0 = calc_color(cb, mc0, counter);
-            c1 = calc_color(cinit, mc1, counter);
+            c0 = calc_color(cb, mc0, counter0);
+            c1 = calc_color(cinit, mc1, counter1);
         }
     }
 }
