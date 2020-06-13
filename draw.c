@@ -11,11 +11,19 @@
 #include "symtab.h"
 
 // scanline helper function
-color calc_color(color a, double * b, int counter) {
+color calc_color(color a, double * n, int counter) {
+    // Minimize rounding errors which make edges of triangles more visible
     color c;
-    c.red = a.red + (int) (counter * b[0]);
-    c.green = a.green + (int) (counter * b[1]);
-    c.blue = a.blue + (int) (counter * b[2]);
+    double red = counter * n[0];
+    int r = (red - floor(red) > 0.5) ? ceil(red) : floor(red);
+    double green = counter * n[1];
+    int g = (green - floor(green) > 0.5) ? ceil(green) : floor(green);
+    double blue = counter * n[2];
+    int b = (blue - floor(blue) > 0.5) ? ceil(blue) : floor(blue);
+
+    c.red = a.red + r;
+    c.green = a.green + g;
+    c.blue = a.blue + b;
     return c;
 }
 void print_color(color c) { // debugging help
@@ -270,27 +278,30 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
     }
 
     if (type < 2) {
+        int counter = 0;
         for (int col = 0; col < lastcol - 2; col += 3) {
             double * normal = calculate_normal(polygons, col);
-                
-            if (normal[2] > 0) {
-                // get color value only if front facing
-                color clight = get_lighting(normal, view, ambient, light, reflect);
+            color clight = get_lighting(normal, view, ambient, light, reflect);
 
-                if (type == WIREFRAME) {
-                    double x0 = matrix[0][col];
-                    double y0 = matrix[1][col];
-                    double x1 = matrix[0][col + 1];
-                    double y1 = matrix[1][col + 1];
-                    double x2 = matrix[0][col + 2];
-                    double y2 = matrix[1][col + 2];
+            if (type == WIREFRAME) {
+                double x0 = matrix[0][col];
+                double y0 = matrix[1][col];
+                double x1 = matrix[0][col + 1];
+                double y1 = matrix[1][col + 1];
+                double x2 = matrix[0][col + 2];
+                double y2 = matrix[1][col + 2];
+                color c;
+                c.red = 0;
+                c.green = 0;
+                c.blue = 0;
 
-                    draw_line(x0, y0, 0, x1, y1, 0, s, zb, clight);
-                    draw_line(x1, y1, 0, x2, y2, 0, s, zb, clight);
-                    draw_line(x2, y2, 0, x0, y0, 0, s, zb, clight);
-                }
-                else { // type = FLAT
-                    color colors[1] = {clight};
+                draw_line(x0, y0, 0, x1, y1, 0, s, zb, c);
+                draw_line(x1, y1, 0, x2, y2, 0, s, zb, c);
+                draw_line(x2, y2, 0, x0, y0, 0, s, zb, c);
+            }
+            else { // type = FLAT
+                color colors[1] = {clight};
+                if (normal[2] > 0) {
                     scanline_convert(polygons, col, s, zb, colors, type);
                 }
             }
@@ -298,6 +309,9 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
     }
 
     else {
+        // Using predetermined normals only work in the original
+        // orientation of an image. We have to calculate normals manually
+        // otherwise. Change the > to a == for a rough fix
         if (vns -> lastcol > 0) { // mesh
             color colors[3];
 
@@ -313,7 +327,7 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
                     colors[i] =  get_lighting(n, view, ambient, light, reflect);
                 }
                 if (type == GOURAUD) {
-                    if (normals[2][col]> 0) {
+                    if (normals[2][col] > 0) {
                         scanline_convert(polygons, col, s, zb, colors, type);
                     }
                 }

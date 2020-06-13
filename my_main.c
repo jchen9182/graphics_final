@@ -180,7 +180,7 @@ void my_main() {
 	cline.green = 0;
 	cline.blue = 0;
 
-	double polystep = 20;
+	double polystep = 100;
 
     // Default shading type
     int type = FLAT;
@@ -201,8 +201,8 @@ void my_main() {
 	light[COLOR][BLUE] = 255;
 
 	double view[3];
-	view[0] = 0;
-	view[1] = 0;
+	view[0] = 0.5;
+	view[1] = 0.5;
 	view[2] = 1;
 
 	//default reflective constants if none are set in script file
@@ -254,13 +254,6 @@ void my_main() {
 
             for (int i = 0; i < lastop; i++) {    
                 switch (op[i].opcode) {
-                    // case LIGHT:
-                    //     printf("Light: %s at: %6.2f %6.2f %6.2f",
-                    //         op[i].op.light.p -> name,
-                    //         op[i].op.light.c[0], op[i].op.light.c[1],
-                    //         op[i].op.light.c[2]);
-                    //     break;
-
                     case SPHERE: {
                         double cx = op[i].op.sphere.d[0];
                         double cy = op[i].op.sphere.d[1];
@@ -494,13 +487,6 @@ void my_main() {
 		    printf("%d: ", i);
         
             switch (op[i].opcode) {
-                // case LIGHT:
-                //     printf("Light: %s at: %6.2f %6.2f %6.2f",
-                //         op[i].op.light.p -> name,
-                //         op[i].op.light.c[0], op[i].op.light.c[1],
-                //         op[i].op.light.c[2]);
-                //     break;
-
                 case SPHERE: {
                     double cx = op[i].op.sphere.d[0];
                     double cy = op[i].op.sphere.d[1];
