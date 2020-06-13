@@ -193,8 +193,8 @@ void my_main() {
 
 	double light[2][3];
 	light[LOCATION][0] = 1;
-	light[LOCATION][1] = 1;
-	light[LOCATION][2] = 2;
+	light[LOCATION][1] = 2;
+	light[LOCATION][2] = 5;
 
 	light[COLOR][RED] = 255;
 	light[COLOR][GREEN] = 255;
