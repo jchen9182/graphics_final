@@ -4,7 +4,7 @@ LDFLAGS = -lm
 CC = gcc
 
 run: parser
-	./mdl face.mdl
+	./mdl mesh.mdl
 
 parser: lex.yy.c y.tab.c y.tab.h $(OBJECTS)
 	$(CC) -o mdl $(CFLAGS) lex.yy.c y.tab.c $(OBJECTS) $(LDFLAGS)

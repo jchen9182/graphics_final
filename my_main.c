@@ -180,7 +180,7 @@ void my_main() {
 	cline.green = 0;
 	cline.blue = 0;
 
-	double polystep = 100;
+	double polystep = 20;
 
     // Default shading type
     int type = FLAT;

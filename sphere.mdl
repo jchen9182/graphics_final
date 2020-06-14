@@ -1,7 +1,7 @@
 constants shiny_purple 0.3 0.2 0.8 0.3 0 0 0.3 0.2 0.8
 
 //frames 50
-shading gouraud
+shading phong
 push
 //rotate x 30
 //rotate y 30

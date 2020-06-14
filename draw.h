@@ -13,9 +13,15 @@
 
 // Scanline
 void draw_scanline( double x0, double z0, double x1, double z1, int y, double offx,
-                    color c0, color c1, screen s, zbuffer zb, int type);
+                    color c0, color c1, screen s, zbuffer zb, 
+                    double * view, double light[2][3], color ambient,
+                    struct constants * reflect,
+                    double * n0, double * n1, int type);
 void scanline_convert(  struct matrix * points, int col, 
-                        screen s, zbuffer zbuff, color * colors, int type);
+                        screen s, zbuffer zbuff, 
+                        double * view, double light[2][3], color ambient,
+                        struct constants * reflect, 
+                        double norms[3][3], int type);
 
 // Polygon organization
 void add_polygons( struct matrix * polygons,
