@@ -88,16 +88,18 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
     }
 
     double mn[3];
+    double n[3];
     if (type == PHONG) {
         mn[0] = dist > 0 ? (n1[0] - n0[0]) / dist : 0;
         mn[1] = dist > 0 ? (n1[1] - n0[1]) / dist : 0;
         mn[2] = dist > 0 ? (n1[2] - n0[2]) / dist : 0;
+        copy_array(n, n0);
     }
 
     color c = c0;
     while (x < ceil(x1)) {
-        if (type == PHONG) c = get_lighting(n0, view, ambient, light, reflect);
-
+        if (type == PHONG) c = get_lighting(n, view, ambient, light, reflect);
+        
         plot(s, zb, c, x, y, z);
 
         z += mz;
@@ -107,7 +109,7 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
             c = calc_color(c0, mc, x - ceil(x0));
         }
         else if (type == PHONG) {
-            add_norm(n0, mn);
+            add_norm(n, mn);
         }
     }
 }
