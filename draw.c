@@ -31,7 +31,7 @@ void swapc(color *a, color *b) {
     *a = *b;
     *b = temp;
 }
-void print_color(color c) { // debugging help
+void print_color(color c) { // debugging
     printf("%u %u %u\n", c.red, c.green, c.blue);
 }
 
@@ -51,7 +51,7 @@ void add_norm(double * a, double * b) {
     a[1] += b[1];
     a[2] += b[2];
 }
-void print_norm(double * n) {
+void print_norm(double * n) { // debugging
     printf("%f %f %f\n", n[0], n[1], n[2]);
 }
 /*======== void draw_scanline() ==========
@@ -308,6 +308,7 @@ void scanline_convert(  struct matrix * points, int col,
             add_norm(n1, mn1);
         }
     }
+    // printf("\n");
 }
 /*======== void add_polygon() ==========
   Inputs:   struct matrix *polygons
