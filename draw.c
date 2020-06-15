@@ -408,7 +408,7 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
         // Using predetermined normals only work in the original
         // orientation of an image. We have to calculate normals manually
         // otherwise. Change the > to a == for a rough fix
-        if (vns -> lastcol == 0) { // mesh
+        if (vns -> lastcol > 0) { // mesh
             double norms[3][3];
             double ** normals = vns -> m;
 
