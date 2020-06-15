@@ -56,11 +56,6 @@ void add_norm(double * a, double * b) {
     a[1] += b[1];
     a[2] += b[2];
 }
-void add_offset(double * n, double * mn, double off) {
-    n[0] += off;
-    n[1] += off;
-    n[2] += off;
-}
 void print_norm(double * n) { // debugging
     printf("%f %f %f\n", n[0], n[1], n[2]);
 }
@@ -81,6 +76,7 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
     double ncopy1[3];
     copy_array(ncopy0, n0);
     copy_array(ncopy1, n1);
+    
     if (x0 > x1) {
         swap(&x0, &x1);
         swap(&z0, &z1);
@@ -186,7 +182,7 @@ void scanline_convert(  struct matrix * points, int col,
     }
 
     double dist0 = yt - yb;
-    double dist1 = ym - yb;
+    double dist1 = ym - yb ;
     double dist2 = yt - ym;
 
     double mx0 = dist0 > 0 ? (xt - xb) / dist0 : 0;
