@@ -11,6 +11,12 @@
 #include "symtab.h"
 
 // scanline helper functions
+void swap(double *a, double *b) {
+    double temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
 color calc_color(color a, double * n, int counter) {
     // Minimize rounding error
     color c;
@@ -41,15 +47,19 @@ void copy_array(double * a, double * b) { // copies b to a
     a[2] = b[2];
 }
 void swap_norm(double * a, double * b) {
-    double temp[3];
-    copy_array(temp, a);
-    copy_array(a, b);
-    copy_array(b, temp);
+    swap(&(a[0]), &(b[0]));
+    swap(&(a[1]), &(b[1]));
+    swap(&(a[2]), &(b[2]));
 }
 void add_norm(double * a, double * b) {
     a[0] += b[0];
     a[1] += b[1];
     a[2] += b[2];
+}
+void add_offset(double * n, double * mn, double off) {
+    n[0] += off;
+    n[1] += off;
+    n[2] += off;
 }
 void print_norm(double * n) { // debugging
     printf("%f %f %f\n", n[0], n[1], n[2]);
@@ -67,15 +77,19 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
                     double * view, double light[2][3], color ambient,
                     struct constants * reflect,
                     double * n0, double * n1, int type) {
+    double ncopy0[3];
+    double ncopy1[3];
+    copy_array(ncopy0, n0);
+    copy_array(ncopy1, n1);
     if (x0 > x1) {
         swap(&x0, &x1);
         swap(&z0, &z1);
         if (type == GOURAUD) swapc(&c0, &c1);
-        if (type == PHONG) swap_norm(n0, n1);
+        if (type == PHONG) swap_norm(ncopy0, ncopy1);
     }
 
     int x = ceil(x0);
-    double dist = x1 - x0 + 1;
+    double dist = x1 - x0;
     
     double mz = dist > 0 ? (z1 - z0) / dist : 0;
     double z = z0 + mz * offx;
@@ -88,17 +102,15 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
     }
 
     double mn[3];
-    double n[3];
     if (type == PHONG) {
-        mn[0] = dist > 0 ? (n1[0] - n0[0]) / dist : 0;
-        mn[1] = dist > 0 ? (n1[1] - n0[1]) / dist : 0;
-        mn[2] = dist > 0 ? (n1[2] - n0[2]) / dist : 0;
-        copy_array(n, n0);
+        mn[0] = dist > 0 ? (ncopy1[0] - ncopy0[0]) / dist : 0;
+        mn[1] = dist > 0 ? (ncopy1[1] - ncopy0[1]) / dist : 0;
+        mn[2] = dist > 0 ? (ncopy1[2] - ncopy0[2]) / dist : 0;
     }
 
     color c = c0;
     while (x < ceil(x1)) {
-        if (type == PHONG) c = get_lighting(n, view, ambient, light, reflect);
+        if (type == PHONG) c = get_lighting(ncopy0, view, ambient, light, reflect);
         
         plot(s, zb, c, x, y, z);
 
@@ -109,17 +121,11 @@ void draw_scanline( double x0, double z0, double x1, double z1, int y, double of
             c = calc_color(c0, mc, x - ceil(x0));
         }
         else if (type == PHONG) {
-            add_norm(n, mn);
+            add_norm(ncopy0, mn);
         }
     }
 }
 
-// scanline_convert helper functions
-void swap(double *a, double *b) {
-    double temp = *a;
-    *a = *b;
-    *b = temp;
-}
 /*======== void scanline_convert() ==========
   Inputs: struct matrix *points
           int i
@@ -179,9 +185,9 @@ void scanline_convert(  struct matrix * points, int col,
         ct = get_lighting(nt, view, ambient, light, reflect);
     }
 
-    double dist0 = yt - yb + 1;
-    double dist1 = ym - yb + 1;
-    double dist2 = yt - ym + 1;
+    double dist0 = yt - yb;
+    double dist1 = ym - yb;
+    double dist2 = yt - ym;
 
     double mx0 = dist0 > 0 ? (xt - xb) / dist0 : 0;
     double mx1 = dist1 > 0 ? (xm - xb) / dist1 : 0;
@@ -310,6 +316,8 @@ void scanline_convert(  struct matrix * points, int col,
             add_norm(n1, mn1);
         }
     }
+    // print_norm(n1);
+    // print_norm(nt);
     // printf("\n");
 }
 /*======== void add_polygon() ==========
