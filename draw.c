@@ -312,9 +312,6 @@ void scanline_convert(  struct matrix * points, int col,
             add_norm(n1, mn1);
         }
     }
-    // print_norm(n1);
-    // print_norm(nt);
-    // printf("\n");
 }
 /*======== void add_polygon() ==========
   Inputs:   struct matrix *polygons
@@ -411,15 +408,17 @@ void draw_polygons( struct matrix * polygons, screen s, zbuffer zb,
         // Using predetermined normals only work in the original
         // orientation of an image. We have to calculate normals manually
         // otherwise. Change the > to a == for a rough fix
-        if (vns -> lastcol > 0) { // mesh
+        if (vns -> lastcol == 0) { // mesh
             double norms[3][3];
             double ** normals = vns -> m;
 
             for (int col = 0; col < lastcol - 2; col += 3) {
                 for (int i = 0; i < 3; i++) {
+                    if (normals[2][col + i] > 0) {
                     norms[i][0] = normals[0][col + i];
                     norms[i][1] = normals[1][col + i];
                     norms[i][2] = normals[2][col + i];
+                    }
                 }
 
                 if (normals[2][col] > 0) {

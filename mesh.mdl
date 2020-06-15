@@ -1,13 +1,20 @@
 constants shiny_purple 0.3 0.5 0.8 0.3 0 0.8 0.3 0.2 0.8
 
+// Move obj file to main directory first
+
 // Corona
-//shading gouraud
-//move 250 250 0
-//scale 8.5 8.5 8.5
-//mesh shiny_purple: c.obj
+//frames 100
+shading phong
+push
+move 250 250 0
+//rotate x 360 anim
+//rotate y 360 anim
+scale 8 8 8
+mesh shiny_purple: c.obj
+//vary anim 0 99 0 1
 
 // Car
-//shading gouraud
+//shading phong
 //push
 //move -40 150 0
 //scale 1.5 1.5 1.5
@@ -17,13 +24,14 @@ constants shiny_purple 0.3 0.5 0.8 0.3 0 0.8 0.3 0.2 0.8
 
 // Soccer Ball
 //frames 50
-shading phong
-push
-move 250 250 0
+//shading gouraud
+//push
+//move 250 250 0
 //rotate y 180
-scale 5 5 5
-mesh shiny_purple: ball.obj
+//scale 5 5 5
+//mesh shiny_purple: ball.obj
 //vary anim 0 49 0 1
+//save ball.png
 
 // Test
 //frames 50
